@@ -1,0 +1,200 @@
+{
+  "info": {
+    "name": "TRIORA API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5001" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "orderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const r = pm.response.json();",
+            "if (r.token) pm.collectionVariables.set('token', r.token);",
+            "pm.test('status 201 or 409', () => pm.expect([201,409]).to.include(pm.response.code));"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/signup",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@triora.com\",\n  \"password\": \"123456\",\n  \"phone\": \"03001234567\"\n}" } }
+        },
+        {
+          "name": "Login (customer)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const r = pm.response.json();",
+            "if (r.token) pm.collectionVariables.set('token', r.token);",
+            "pm.test('status 200', () => pm.response.to.have.status(200));"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@triora.com\",\n  \"password\": \"123456\"\n}" } }
+        },
+        {
+          "name": "Login (admin - after npm run seed)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const r = pm.response.json();",
+            "if (r.token) pm.collectionVariables.set('adminToken', r.token);",
+            "pm.test('status 200', () => pm.response.to.have.status(200));"
+          ] } }],
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@triora.com\",\n  \"password\": \"Admin@123\"\n}" } }
+        },
+        {
+          "name": "Get Me",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me" }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get all categories",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const r = pm.response.json();",
+            "if (Array.isArray(r) && r.length) pm.collectionVariables.set('categoryId', r[0]._id);"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/categories" }
+        },
+        {
+          "name": "Get categories - Teen Boys",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/categories?ageGroup=teen&gender=boys",
+            "host": ["{{baseUrl}}"], "path": ["api","categories"],
+            "query": [{ "key": "ageGroup", "value": "teen" }, { "key": "gender", "value": "boys" }] } }
+        },
+        {
+          "name": "Add category (admin)",
+          "request": { "method": "POST", "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/categories",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Bomber Jackets\",\n  \"ageGroup\": \"adult\",\n  \"gender\": \"men\"\n}" } }
+        },
+        {
+          "name": "Delete category (admin)",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/categories/{{categoryId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get all products",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const r = pm.response.json();",
+            "if (r.items && r.items.length) pm.collectionVariables.set('productId', r.items[0]._id);",
+            "pm.test('status 200', () => pm.response.to.have.status(200));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/products" }
+        },
+        {
+          "name": "Filter - Teen Boys hoodies/tees",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/products?ageGroup=teen&gender=boys&sort=price_asc",
+            "host": ["{{baseUrl}}"], "path": ["api","products"],
+            "query": [{ "key": "ageGroup", "value": "teen" }, { "key": "gender", "value": "boys" }, { "key": "sort", "value": "price_asc" }] } }
+        },
+        {
+          "name": "Filter - Collection: Eid",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/products?collection=eid-collection",
+            "host": ["{{baseUrl}}"], "path": ["api","products"],
+            "query": [{ "key": "collection", "value": "eid-collection" }] } }
+        },
+        {
+          "name": "Search products",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/products?search=hoodie",
+            "host": ["{{baseUrl}}"], "path": ["api","products"],
+            "query": [{ "key": "search", "value": "hoodie" }] } }
+        },
+        {
+          "name": "Get product by id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/products/{{productId}}" }
+        },
+        {
+          "name": "Add product (admin)",
+          "request": { "method": "POST", "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/products",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Varsity Jacket\",\n  \"description\": \"Classic varsity jacket\",\n  \"price\": 79,\n  \"ageGroup\": \"teen\",\n  \"gender\": \"boys\",\n  \"category\": \"varsity-jackets\",\n  \"collections\": [\"streetwear\", \"limited-edition\"],\n  \"sizes\": [\"S\", \"M\", \"L\"],\n  \"colors\": [\"Red\", \"Black\"],\n  \"stock\": 25,\n  \"isFeatured\": true\n}" } }
+        },
+        {
+          "name": "Update product (admin)",
+          "request": { "method": "PUT", "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/products/{{productId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 35,\n  \"stock\": 60\n}" } }
+        },
+        {
+          "name": "Delete product (admin)",
+          "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/products/{{productId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create order",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "const r = pm.response.json();",
+            "if (r.order) pm.collectionVariables.set('orderId', r.order._id);"
+          ] } }],
+          "request": { "method": "POST", "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/orders",
+            "body": { "mode": "raw", "raw": "{\n  \"items\": [\n    { \"product\": \"{{productId}}\", \"qty\": 2, \"size\": \"M\", \"color\": \"Black\" }\n  ],\n  \"shippingAddress\": \"House 1, Street 2, Vihari, Punjab\",\n  \"paymentMethod\": \"cod\"\n}" } }
+        },
+        {
+          "name": "My orders",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/orders/my" }
+        },
+        {
+          "name": "All orders (admin)",
+          "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/orders" }
+        },
+        {
+          "name": "Update order status (admin)",
+          "request": { "method": "PUT", "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\"\n}" } }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Add review",
+          "request": { "method": "POST", "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/reviews",
+            "body": { "mode": "raw", "raw": "{\n  \"product\": \"{{productId}}\",\n  \"rating\": 5,\n  \"comment\": \"Great quality, fits perfectly!\"\n}" } }
+        },
+        {
+          "name": "Get product reviews",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/reviews/product/{{productId}}" }
+        }
+      ]
+    }
+  ]
+}
