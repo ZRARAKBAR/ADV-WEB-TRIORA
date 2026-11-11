@@ -5,7 +5,6 @@ import { api } from "../api/api";
 import ProductCard from "../components/ProductCard";
 import "./home.css";
 
-/* ---------- static content (edit freely) ---------- */
 const MARQUEE = ["New Arrivals", "Streetwear", "Eid Collection", "Wedding Edit", "Luxury", "Essentials", "Limited Edition", "Newborn to Adult"];
 
 const SEGMENTS = [
